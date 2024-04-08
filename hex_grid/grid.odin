@@ -10,6 +10,47 @@ GRID_VALUE_ERROR: GridErrno : 1
 EVEN :: 1
 ODD :: -1
 
+HEX_DIRECTIONS := [6]Hex {
+	Hex_init(1, 0, -1),
+	Hex_init(1, -1, 0),
+	Hex_init(0, -1, 1),
+	Hex_init(-1, 0, 1),
+	Hex_init(-1, 1, 0),
+	Hex_init(0, 1, -1),
+}
+
+HEX_DIAGONALS := [6]Hex {
+	Hex_init(2, -1, -1),
+	Hex_init(1, -2, 1),
+	Hex_init(-1, -1, 2),
+	Hex_init(-2, 1, 1),
+	Hex_init(-1, 2, -1),
+	Hex_init(1, 1, -2),
+}
+
+POINTY_ORIENTATION := Orientation {
+	math.sqrt_f64(3.0),
+	math.sqrt_f64(3.0) / 2.0,
+	0.0,
+	3.0 / 2.0,
+	math.sqrt_f64(3.0) / 3.0,
+	-1.0 / 3.0,
+	0.0,
+	2.0 / 3.0,
+	0.5,
+}
+
+FLAT_ORIENTATION := Orientation {
+	3.0 / 2.0,
+	0.0,
+	math.sqrt_f64(3.0) / 2.0,
+	math.sqrt_f64(3.0),
+	2.0 / 3.0,
+	0.0,
+	-1.0 / 3.0,
+	math.sqrt_f64(3.0) / 3.0,
+	0.0,
+}
 
 Point :: struct {
 	x: f64,
@@ -28,11 +69,11 @@ FractionalHex :: struct {
 	s: f64,
 }
 
-
 OffsetCoord :: struct {
 	col: int,
 	row: int,
 }
+
 DoubledCoord :: struct {
 	col: int,
 	row: int,
@@ -57,9 +98,20 @@ Layout :: struct {
 }
 
 Hex_init_cubic :: proc(q, r, s: int) -> Hex {
-	assert(q + r + s == 0)
+	fmt.assertf(
+		q + r + s == 0,
+		"Could not initialize Hex with values, q: {0}, r: {1}, s: {2}. q+r+s= {3} != 0",
+		q,
+		r,
+		s,
+		q + r + s,
+	)
+	// if !(q + r + s == 0) {
+	// 	fmt.println("FAILED HEX SUM CHECK")
+	// }
 	return Hex{q, r, s}
 }
+
 Hex_init_axial :: proc(q, r: int) -> Hex {
 	return Hex{q, r, -q - r}
 }
@@ -68,10 +120,22 @@ Hex_init :: proc {
 	Hex_init_cubic,
 	Hex_init_axial,
 }
+
 FractionalHex_init_cubic :: proc(q, r, s: f64) -> FractionalHex {
-	assert(q + r + s <= 1e-06)
+	fmt.assertf(
+		q + r + s <= 1e-06,
+		"Could not initialize Fractional Hex with values, q: {0}, r: {1}, s: {2}. q+r+s= {3} != 0",
+		q,
+		r,
+		s,
+		q + r + s,
+	)
+	// if !(q + r + s <= 1e-06) {
+	// 	fmt.println("FAILED FRACTIONAL HEX SUM CHECK")
+	// }
 	return FractionalHex{q, r, s}
 }
+
 FractionalHex_init_axial :: proc(q, r: f64) -> FractionalHex {
 	return FractionalHex{q, r, -q - r}
 }
@@ -81,26 +145,13 @@ FractionalHex_init :: proc {
 	FractionalHex_init_axial,
 }
 
-HEX_DIRECTIONS := [6]Hex {
-	Hex_init(1, 0, -1),
-	Hex_init(1, -1, 0),
-	Hex_init(0, -1, 1),
-	Hex_init(-1, 0, 1),
-	Hex_init(-1, 1, 0),
-	Hex_init(0, 1, -1),
-}
-HEX_DIAGONALS := [6]Hex {
-	Hex_init(2, -1, -1),
-	Hex_init(1, -2, 1),
-	Hex_init(-1, -1, 2),
-	Hex_init(-2, 1, 1),
-	Hex_init(-1, 2, -1),
-	Hex_init(1, 1, -2),
-}
-
 
 Hex_add :: proc(a, b: Hex) -> Hex {
 	return Hex_init(a.q + b.q, a.r + b.r, a.s + b.s)
+}
+
+FractionHex_add :: proc(a, b: FractionalHex) -> FractionalHex {
+	return FractionalHex_init(a.q + b.q, a.r + b.r, a.s + b.s)
 }
 
 Hex_subtract :: proc(a, b: Hex) -> Hex {
@@ -119,31 +170,31 @@ Hex_rotate_right :: proc(a: Hex) -> Hex {
 	return Hex_init(-a.r, -a.s, -a.q)
 }
 
-Hex_direction :: proc(direction: int) -> Hex {
+Hex_init_direction :: proc(direction: int) -> Hex {
 	return HEX_DIRECTIONS[direction]
 }
 
 Hex_permute_QRS :: proc(h: Hex) -> Hex {
-    return Hex_init(h.q, h.r, h.s)
+	return Hex_init(h.q, h.r, h.s)
 }
 Hex_permute_QSR :: proc(h: Hex) -> Hex {
-    return Hex_init(h.q, h.s, h.r)
+	return Hex_init(h.q, h.s, h.r)
 }
 Hex_permute_SQR :: proc(h: Hex) -> Hex {
-    return Hex_init(h.s, h.q, h.r)
+	return Hex_init(h.s, h.q, h.r)
 }
 Hex_permute_SRQ :: proc(h: Hex) -> Hex {
-    return Hex_init(h.s, h.r, h.q)
+	return Hex_init(h.s, h.r, h.q)
 }
 Hex_permute_RQS :: proc(h: Hex) -> Hex {
-    return Hex_init(h.r, h.q, h.s)
+	return Hex_init(h.r, h.q, h.s)
 }
 Hex_permute_RSQ :: proc(h: Hex) -> Hex {
-    return Hex_init(h.r, h.s, h.q)
+	return Hex_init(h.r, h.s, h.q)
 }
 
 Hex_neighbor :: proc(hex: Hex, direction: int) -> Hex {
-	return Hex_add(hex, Hex_direction(direction))
+	return Hex_add(hex, Hex_init_direction(direction))
 }
 
 Hex_diagonal_neighbor :: proc(hex: Hex, direction: int) -> Hex {
@@ -177,7 +228,15 @@ Hex_round :: proc(h: FractionalHex) -> Hex {
 	return Hex_init(qi, ri, si)
 }
 
-Hex_lerp :: proc(a, b: FractionalHex, t: f64) -> FractionalHex {
+Hex_lerp :: proc(a, b: Hex, t: f64) -> FractionalHex {
+	return FractionalHex_init(
+		f64(a.q) * (1.0 - t) + f64(b.q) * t,
+		f64(a.r) * (1.0 - t) + f64(b.r) * t,
+		f64(a.s) * (1.0 - t) + f64(b.s) * t,
+	)
+}
+
+FractionalHex_lerp :: proc(a, b: FractionalHex, t: f64) -> FractionalHex {
 	return FractionalHex_init(
 		a.q * (1.0 - t) + b.q * t,
 		a.r * (1.0 - t) + b.r * t,
@@ -200,7 +259,10 @@ Hex_linedraw :: proc(a, b: Hex) -> [dynamic]Hex {
 	results := [dynamic]Hex{}
 	step := 1.0 / f64(max(N, 1))
 	for i in 0 ..< N + 1 {
-		append(&results, Hex_round(Hex_lerp(a_nudge, b_nudge, step * f64(i))))
+		append(
+			&results,
+			Hex_round(FractionalHex_lerp(a_nudge, b_nudge, step * f64(i))),
+		)
 	}
 	return results
 }
@@ -307,30 +369,6 @@ rdoubled_to_cube :: proc(h: DoubledCoord) -> Hex {
 	return Hex_init(q, r, s)
 }
 
-layout_pointy := Orientation {
-	math.sqrt_f64(3.0),
-	math.sqrt_f64(3.0) / 2.0,
-	0.0,
-	3.0 / 2.0,
-	math.sqrt_f64(3.0) / 3.0,
-	-1.0 / 3.0,
-	0.0,
-	2.0 / 3.0,
-	0.5,
-}
-
-layout_flat := Orientation {
-	3.0 / 2.0,
-	0.0,
-	math.sqrt_f64(3.0) / 2.0,
-	math.sqrt_f64(3.0),
-	2.0 / 3.0,
-	0.0,
-	-1.0 / 3.0,
-	math.sqrt_f64(3.0) / 3.0,
-	0.0,
-}
-
 Hex_to_pixel :: proc(layout: Layout, h: Hex) -> Point {
 	M := layout.orientation
 	size := layout.size
@@ -340,7 +378,18 @@ Hex_to_pixel :: proc(layout: Layout, h: Hex) -> Point {
 	return Point{x + origin.x, y + origin.y}
 
 }
-pixel_to_hex :: proc(layout: Layout, p: Point) -> FractionalHex {
+
+FractionalHex_to_pixel :: proc(layout: Layout, h: FractionalHex) -> Point {
+	M := layout.orientation
+	size := layout.size
+	origin := layout.origin
+	x := (M.f0 * h.q + M.f1 * h.r) * size.x
+	y := (M.f2 * h.q + M.f3 * h.r) * size.y
+	return Point{x + origin.x, y + origin.y}
+
+}
+
+Hex_from_pixel :: proc(layout: Layout, p: Point) -> FractionalHex {
 	M := layout.orientation
 	size := layout.size
 	origin := layout.origin
@@ -365,4 +414,12 @@ polygon_corners :: proc(layout: Layout, h: Hex) -> [dynamic]Point {
 		append(&corners, Point{center.x + offset.x, center.y + offset.y})
 	}
 	return corners
+}
+
+Hex_to_string :: proc(hex: Hex) -> string {
+	return fmt.aprintf("{0},{1},{2}", hex.q, hex.r, hex.s)
+}
+
+FractionalHex_to_string :: proc(hex: FractionalHex) -> string {
+	return fmt.aprintf("{0},{1},{2}", hex.q, hex.r, hex.s)
 }

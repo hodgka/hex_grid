@@ -11,3 +11,6 @@ minimal
 complete
 readme
 routing
+
+tests/tests
+hex_grid/hex_grid
