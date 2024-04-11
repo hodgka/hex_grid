@@ -65,7 +65,8 @@ Hex_draw_outline :: proc(
 	)
 }
 
-Hex_draw_label :: proc(layout: Layout, hex: Hex, color: rl.Color) {
+Hex_draw_label :: proc(layout: Layout, hex: Hex, color: rl.Color, label: cstring) {
+	label := label
 	font_size := i32(
 		math.round(
 			0.4 * math.min(math.abs(layout.size.x), math.abs(layout.size.y)),
@@ -73,7 +74,10 @@ Hex_draw_label :: proc(layout: Layout, hex: Hex, color: rl.Color) {
 	)
 	default_font_size: i32 = 10
 	center := Hex_to_pixel(layout, hex)
-	label := fmt.ctprintf("{0}, {1}, {2}", hex.q, hex.r, hex.s)
+	if len(label) == 0{
+		label = fmt.ctprintf("{0}, {1}, {2}", hex.q, hex.r, hex.s)
+	}
+
 	default_font := rl.GetFontDefault()
 	spacing := font_size / default_font_size
 	size := rl.MeasureTextEx(default_font, label, f32(font_size), f32(spacing))
@@ -88,7 +92,7 @@ Hex_draw_grid :: proc(layout: Layout, hexes: [dynamic]Hex) {
 		color := Hex_get_color(hex)
 		Hex_draw(layout, hex, color)
 		Hex_draw_outline(layout, hex, rl.BLACK, 2)
-		Hex_draw_label(layout, hex, rl.WHITE)
+		Hex_draw_label(layout, hex, rl.WHITE, "")
 	}
 }
 

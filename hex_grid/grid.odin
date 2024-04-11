@@ -416,6 +416,43 @@ polygon_corners :: proc(layout: Layout, h: Hex) -> [dynamic]Point {
 	return corners
 }
 
+
+Hex_bounding_box :: proc(layout:Layout, h: Hex) -> [2]Point {
+	x_min := max(f64)
+	y_min := max(f64)
+	x_max := min(f64)
+	y_max := min(f64)
+	x, y: f64
+	center := Hex_to_pixel(layout, h)
+	for i in 0 ..< 6 {
+		offset := Hex_corner_offset(layout, i)
+		x = center.x + offset.x
+		y = center.y + offset.y
+		x_min = min(x_min, x)
+		y_min = min(y_min, y)
+		x_max = max(x_max, x)
+		y_max = max(y_max, y)
+
+	}
+	return {Point{x_min, y_min}, Point{x_max, y_max}}
+}
+
+Hexgrid_bounding_box :: proc(layout:Layout, grid: [dynamic]Hex) -> [2]Point {
+	x_min := max(f64)
+	y_min := max(f64)
+	x_max := min(f64)
+	y_max := min(f64)
+	x, y: f64
+	for hex in grid {
+		hex_bb := Hex_bounding_box(layout, hex)
+		x_min = min(x_min, hex_bb[0].x)
+		y_min = min(y_min, hex_bb[0].y)
+		x_max = max(x_max, hex_bb[1].x)
+		y_max = max(y_max, hex_bb[1].y)
+	}
+	return {Point{x_min, y_min}, Point{x_max, y_max}}
+}
+
 Hex_to_string :: proc(hex: Hex) -> string {
 	return fmt.aprintf("{0},{1},{2}", hex.q, hex.r, hex.s)
 }
